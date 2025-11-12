@@ -1,0 +1,82 @@
+server:
+  port: 9000
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: searchGasStation
+
+  jackson:
+    time-zone: Asia/Seoul
+
+  devtools:
+    livereload:
+      enabled: true
+      port: 35729
+    restart:
+      enabled: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/illoomung?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 1234
+
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: create # create, update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time-zone: Asia/Seoul
+
+  thymeleaf:
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false # ?? ???? ??
+    check-template: true
+
+  web:
+    resources:
+      cache:
+        period: 0
+      chain:
+        cache: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+opinet:
+  api:
+    key: "F251111103"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
