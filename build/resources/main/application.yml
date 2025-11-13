@@ -60,6 +60,11 @@ spring:
 opinet:
   api:
     key: "F251111103"
+    aroundAll: "http://www.opinet.co.kr/api/aroundAll.do"
+
+kakao:
+  maps:
+    script-key: "3e8387dd9f8679e8e9d28530cf259be3"
 
 
 

@@ -1,0 +1,119 @@
+/* 페이지 전체 여백 제거 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* 헤더 바 스타일 */
+.header-bar {
+    background-color: #333; /* 어두운 배경색 */
+    color: white; /* 글자 흰색 */
+    padding: 10px 20px; /* 안쪽 여백 */
+    display: flex; /* 가로 정렬 */
+    justify-content: space-between; /* 양쪽 끝으로 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+
+/* 헤더의 h1 태그와 a 태그 스타일 */
+.header-bar h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+.header-bar h1 a {
+    color: white;
+    text-decoration: none;
+}
+
+.header-bar nav span {
+    margin-left: 15px;
+}
+
+/* [수정] 헤더의 메뉴 아이템 (a 태그) 스타일 */
+.header-bar nav .menu-item {
+    color: white;           /* 아이콘 흰색 */
+    text-decoration: none;  /* 밑줄 제거 */
+    margin-left: 20px;      /* 아이콘 사이 간격 (조금 늘림) */
+
+    /* * [핵심] font-size로 아이콘의 크기를 조절합니다.
+     * (1em은 기본 글자 크기, 1.2em은 1.2배)
+     */
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+/* 마우스를 올렸을 때 스타일 (선택 사항) */
+.header-bar nav .menu-item:hover {
+    color: #ccc; /* 마우스 올리면 살짝 연한 회색으로 */
+}
+
+/* [추가] 모달 콘텐츠 내부 스타일 */
+.side-modal  {
+    /* 모달 헤더와 적용 버튼 사이의 공간을 채우도록 */
+    height: calc(100% - 140px); /* (전체높이 - 헤더 - 적용버튼) */
+    overflow-y: auto; /* 내용 길어지면 스크롤 */
+    z-index: 20001;
+}
+
+.side-modal.open {
+    right: 0;
+}
+
+.mode-overlay {
+    z-index: 20000;
+}
+
+/* 오버레이도 마찬가지입니다 */
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    height: calc(100% - 140px); /* (전체높이 - 헤더 - 적용버튼) */
+    overflow-y: auto; /* 내용 길어지면 스크롤 */
+}
+
+/* [추가] 필터 그룹 스타일 */
+.filter-group {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+.filter-group h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+.filter-option {
+    margin-bottom: 5px;
+}
+/* 라디오 버튼과 라벨 정렬 */
+.filter-option input[type="radio"] {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.filter-option label {
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+/* [추가] 적용 버튼 스타일 */
+.apply-button {
+    position: absolute; /* 모달 하단에 고정 */
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+
+    width: calc(100% - 40px); /* (좌우 패딩 20px 제외) */
+    padding: 15px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+}
+.apply-button:hover {
+    background-color: #555;
+}

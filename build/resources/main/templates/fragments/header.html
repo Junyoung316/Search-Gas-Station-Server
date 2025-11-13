@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="headerBar" class="header-bar">
+    <h1><a th:href="@{/}">내 주변 주유소 찾기</a></h1>
+    <nav>
+        <a href="#" id="searchButton" class="menu-item">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </a>
+
+        <a href="#" id="filterButton" class="menu-item">
+            <i class="fa-solid fa-filter"></i>
+        </a>
+    </nav>
+</header>
+</body>
+</html>
