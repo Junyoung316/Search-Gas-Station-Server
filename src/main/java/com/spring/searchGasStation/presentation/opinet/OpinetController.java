@@ -19,9 +19,17 @@ public class OpinetController {
             @RequestParam double x,
             @RequestParam double y,
             @RequestParam int radius,
-            @RequestParam String prodcd) {
-        String gasStationsList = opinetService.getAroundStationList(x, y, radius, prodcd);
+            @RequestParam String prodcd,
+            @RequestParam int sort) {
+        String gasStationsList = opinetService.getAroundStationList(x, y, radius, prodcd, sort);
         log.info("gasStationsList: {}", gasStationsList);
         return gasStationsList;
     }
+
+    @GetMapping("/api/station-detail")
+    public String getStationDetail(@RequestParam String id) {
+        // ID (UNI_ID)를 받아 서비스 호출
+        return opinetService.getStationDetail(id);
+    }
+
 }

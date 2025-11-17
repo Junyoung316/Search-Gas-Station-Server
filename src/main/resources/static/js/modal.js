@@ -5,6 +5,20 @@ console.log("1. modal.js 파일이 로드되었습니다.");
 document.addEventListener("DOMContentLoaded", function() {
     console.log("2. DOM 로드 완료");
 
+    // ---------------------------------------------------------
+    // [추가] 1. 헤더 높이 측정
+    // ---------------------------------------------------------
+    const headerBar = document.querySelector(".header-bar");
+    let headerHeight = 0; // 기본값
+
+    if (headerBar) {
+        headerHeight = headerBar.offsetHeight; // 헤더의 실제 픽셀 높이
+    }
+
+    // 2. 측정된 높이를 '--header-height'라는 CSS 변수로 저장
+    // (예: 62px)
+    document.documentElement.style.setProperty('--header-height', headerHeight + 'px');
+
     const filterButton = document.getElementById("filterButton");
     const filterModal = document.getElementById("filterModal");
     const modalOverlay = document.getElementById("modalOverlay");
@@ -42,20 +56,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (applyButton) {
         applyButton.addEventListener("click", function() {
-            // ... 필터 적용 로직 ...
+
+            // (1~2) 반경, 유종 읽기 (기존 코드)
             const selectedRadius = document.querySelector('input[name="radius"]:checked').value;
             const selectedProdcd = document.querySelector('input[name="prodcd"]:checked').value;
 
+            // [추가] (3) 정렬 값 읽기
+            const selectedSort = document.querySelector('input[name="sort"]:checked').value;
+
+            // 전역 변수 업데이트
             window.currentRadius = parseInt(selectedRadius, 10);
             window.currentProdcd = selectedProdcd;
+            window.currentSort = parseInt(selectedSort, 10); // [추가]
 
             closeModal();
+            window.reloadMapData();
+        });
+    }
 
-            if (typeof window.reloadMapData === "function") {
-                window.reloadMapData();
-            } else {
-                console.error("reloadMapData 함수가 없습니다.");
-            }
+    // ---------------------------------------------------------
+    // [추가] 하단 주유소 모달(Sheet) 닫기 이벤트
+    // ---------------------------------------------------------
+    const stationModal = document.getElementById('stationDetailModal');
+
+    // 1. 하단 모달의 'X' 버튼 클릭 시
+    if (stationModal) {
+        const closeBtn = stationModal.querySelector('.close-btn');
+        closeBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            stationModal.classList.remove('open');
         });
     }
 });

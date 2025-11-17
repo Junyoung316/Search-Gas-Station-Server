@@ -21,17 +21,31 @@
         */
         .side-modal {
             position: fixed !important;
-            top: 0 !important;
-            right: -320px !important; /* 평소에는 화면 밖으로 숨김 */
+
+            /* [수정] 60px 대신 JS가 측정한 변수 사용 */
+            top: var(--header-height, 60px) !important;
+
+            right: -320px !important;
             width: 300px !important;
-            height: 100% !important;
+
+            /* [수정] 높이도 변수 사용 */
+            height: calc(100% - var(--header-height, 60px)) !important;
+
             background-color: white !important;
-            z-index: 99999 !important; /* 지도보다 무조건 위에 오도록 엄청 큰 값 */
+            z-index: 99999 !important; /* 가장 높음 */
             transition: right 0.3s ease-in-out !important;
             box-shadow: -2px 0 10px rgba(0,0,0,0.3) !important;
             padding: 20px;
             box-sizing: border-box;
-            display: block !important; /* 혹시 display:none 되어있을까봐 강제 표시 */
+            /* [추가] Flexbox 컨테이너로 설정 */
+            display: flex !important;
+            flex-direction: column !important; /* 세로 정렬 */
+        }
+
+        .side-modal h2 {
+            padding: 20px 20px 10px 20px; /* 패딩 추가 */
+            margin: 0;
+            flex-shrink: 0; /* [핵심] 공간이 부족해도 줄어들지 않음 */
         }
 
         /* 'open' 클래스가 붙으면 화면 안으로 이동 */
@@ -75,16 +89,131 @@
         /* [수정] 닫기 버튼 위치 재설정 */
         .side-modal .close-btn {
             /* 기존의 absolute(절대 위치) 설정을 해제합니다 */
-            position: static !important;
+            position: absolute !important;
+            top: 10px;
+            right: 15px;
             font-size: 2.5em !important;
             color: #333;
             text-decoration: none;
             line-height: 1;
-            cursor: pointer;
         }
 
         .side-modal .close-btn:hover {
             color: #ff0000; /* 마우스 올리면 빨간색 */
+        }
+
+        .side-modal .modal-content {
+            padding: 0 20px;   /* 좌우 패딩 */
+            overflow-y: auto;  /* 필터 옵션이 길어지면 자체 스크롤 */
+            flex-shrink: 0;    /* [핵심] 줄어들지 않음 */
+        }
+
+        /* [추가] 2. 하단 주유소 정보 모달 (Bottom Sheet)
+*/
+        .bottom-sheet {
+            position: fixed !important;
+
+            /* [수정] 60px 대신 JS가 측정한 변수 사용 */
+            top: var(--header-height, 60px) !important;
+
+            right: -320px !important;
+            width: 300px !important;
+
+            /* [수정] 높이도 변수 사용 */
+            height: calc(100% - var(--header-height, 60px)) !important;
+
+            background-color: white !important;
+            z-index: 9000 !important; /* 필터 모달보다 낮음 */
+
+            padding: 20px;
+            padding-top: 40px; /* 닫기 버튼 공간 확보 */
+
+            /* [수정] bottom -> right로 변경 */
+            transition: right 0.3s ease-in-out !important;
+
+            /* [수정] 왼쪽 그림자 */
+            box-shadow: -3px 0 15px rgba(0,0,0,0.15);
+
+            /* [삭제] border-radius 삭제 (필요 없음) */
+            box-sizing: border-box;
+        }
+
+        /* 하단 모달이 열리면 (open 클래스가 붙으면) */
+        .bottom-sheet.open {
+            bottom: auto !important; /* [수정] bottom 속성 초기화 */
+            right: 0 !important;   /* [수정] 오른쪽에서 나오도록 함 */
+        }
+
+        /* 하단 모달의 닫기 버튼 (X) */
+        .bottom-sheet .close-btn {
+            position: absolute !important;
+            top: 10px;
+            right: 15px;
+            font-size: 2.5em !important;
+            color: #333;
+            text-decoration: none;
+            line-height: 1;
+        }
+
+        .bottom-sheet .close-btn:hover {
+            color: #ff0000;
+        }
+
+        .bottom-sheet .sheet-content {
+            /* 내부 콘텐츠 스타일 (필요시 추가) */
+        }
+
+        .apply-button {
+            position: static !important; /* absolute 해제 */
+            flex-shrink: 0; /* [핵심] 줄어들지 않음 */
+
+            width: calc(100% - 40px); /* 좌우 여백 20px씩 계산 */
+            margin: 10px 20px 10px 20px; /* 위아래 10px, 좌우 20px 여백 */
+
+            padding: 15px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .apply-button:hover {
+            background-color: #555;
+        }
+
+        /* [추가] 필터 모달 안의 주유소 리스트 컨테이너 */
+        #stationListContainer {
+            /* 적용 버튼(apply-button) 아래부터 끝까지 */
+            overflow-y: auto; /* 리스트가 길어지면 스크롤 */
+            border-top: 1px solid #eee;
+            flex-grow: 1 !important; /* [핵심] 남는 공간을 모두 차지 */
+            min-height: 50px; /* 최소 높이 보장 */
+        }
+
+        /* [추가] 리스트 개별 아이템 스타일 (예시) */
+        .list-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+        .list-item b {
+            font-size: 14px;
+            color: #333;
+        }
+        .list-item .price {
+            color: #d9534f;
+            font-weight: bold;
+        }
+        .list-item .dist {
+            font-size: 12px;
+            color: #777;
+            float: right;
         }
 
     </style>
@@ -99,13 +228,12 @@
 </main>
 
 <div id="filterModal" class="side-modal">
+    <a href="#" class="close-btn">&times;</a>
 
-    <div class="modal-header">
-        <h2>필터 설정</h2>
-        <a href="#" class="close-btn">&times;</a>
-    </div>
+    <h2>필터 설정</h2>
 
     <div class="modal-content">
+
         <div class="filter-group">
             <h3>반경</h3>
             <div class="filter-option">
@@ -130,7 +258,7 @@
             <h3>유종</h3>
             <div class="filter-option">
                 <input type="radio" id="fuelB027" name="prodcd" value="B027" checked>
-                <label for="fuelB027">휘발유 (기본)</label>
+                <label for="fuelB027">휘발유</label>
             </div>
             <div class="filter-option">
                 <input type="radio" id="fuelD047" name="prodcd" value="D047">
@@ -145,9 +273,50 @@
                 <label for="fuelK015">LPG</label>
             </div>
         </div>
+
+        <div class="filter-group">d
+            <h3>정렬</h3>
+            <div class="filter-option">
+                <input type="radio" id="sortPrice" name="sort" value="1" checked>
+                <label for="sortPrice">가격순 (기본)</label>
+            </div>
+            <div class="filter-option">
+                <input type="radio" id="sortDist" name="sort" value="2">
+                <label for="sortDist">거리순</label>
+            </div>
+        </div>
     </div>
 
     <button id="applyFilterButton" class="apply-button">필터 적용</button>
+
+    <div id="stationListContainer">
+        <p style="padding: 20px; text-align: center; color: #888;">
+            필터를 적용해 주세요.
+        </p>
+    </div>
+</div>
+<div id="stationDetailModal" class="bottom-sheet">
+    <a href="#" class="close-btn">&times;</a>
+
+    <div class="sheet-content">
+        <div id="modalStationBrand" style="color: #666; font-size: 11px; margin-bottom: 2px;">
+            (상표)
+        </div>
+
+        <div id="modalStationName" style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 12px;">
+            (주유소 이름)
+        </div>
+
+        <div id="modalStationPrice" style="font-size: 1.1em; margin-bottom: 8px; border-top: 1px solid #eee; padding-top: 8px;">
+            (유종: 가격)
+        </div>
+
+        <div id="modalStationDist" style="font-size: 0.9em; color: #888;">
+            (거리)
+        </div>
+        <div id="modalStationExtras" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; font-size: 12px; color: #555;">
+        </div>
+    </div>
 </div>
 
 <div id="modalOverlay" class="modal-overlay"></div>
@@ -164,6 +333,8 @@
     window.currentRadius = 3000; // 기본값 5km (5000m) - 'checked'된 값과 일치
     window.currentProdcd = 'B027'; // 기본값 보통휘발유 - 'checked'된 값과 일치
     window.currentUserLocation = null; // 사용자의 (위도, 경도) 객체 (아직 모름)
+    window.currentSort = 1; // [추가] 정렬 (1:가격순, 2:거리순)
+    let isFirstLoad = true; // [추가] 첫 로드인지 확인
 
     // ---------------------------------------------
     // 2. 기본 맵 생성 (서울시청) - (변경 없음)
@@ -235,9 +406,14 @@
         // 1. 기존 마커 제거
         removeMarkers();
 
+        // [추가] 리스트 컨테이너 가져오기 및 비우기
+        var listContainer = document.getElementById('stationListContainer');
+        listContainer.innerHTML = ""; // 리스트 비우기
+
         // 2. 데이터 유효성 검사
-        if (!data || !data.RESULT || !data.RESULT.OIL) {
+        if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
             console.log("주유소 데이터가 없습니다.");
+            listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">주변 주유소 정보가 없습니다.</p>';
             return;
         }
 
@@ -279,6 +455,23 @@
             // 마커 배열에 저장 (나중에 지우기 위해)
             markers.push(marker);
 
+            var distStr = "";
+            var distVal = parseFloat(station.DISTANCE);
+            if (!isNaN(distVal)) {
+                if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
+                else distStr = Math.round(distVal) + "m";
+            }
+
+            // 리스트 아이템 HTML 생성
+            var itemHtml = `
+            <div class="list-item">
+                <span class="dist">${distStr}</span>
+                <b>${station.OS_NM}</b><br>
+                <span class="price">${station.PRICE}원</span>
+            </div>
+            `;
+            listContainer.innerHTML += itemHtml;
+
             // 인포윈도우(가격 표시) 추가
             addInfoWindow(marker, station);
         }
@@ -297,94 +490,141 @@
         }
     }
 
-    // 인포윈도우 추가 함수
+    // [전체 수정] 인포윈도우 함수
     function addInfoWindow(marker, station) {
 
-        // 1. [매핑] 상표(Brand)
-        var brandMap = {
-            "SKE": "SK에너지", "GSC": "GS칼텍스", "HDO": "현대오일뱅크",
-            "SOL": "S-OIL", "RTE": "자영알뜰", "RTX": "고속도로알뜰",
-            "NHO": "농협알뜰", "ETC": "자가상표", "E1G": "E1", "SKG": "SK가스"
-        };
-        var brandName = brandMap[station.POLL_DIV_CD] || station.POLL_DIV_CD || "알수없음";
+        // (1) 'aroundAll' API가 제공한 기본 정보 (미리 저장)
+        var stationId = station.UNI_ID; // 주유소 ID
+        var distance = station.DISTANCE; // 거리 (상세 API에는 없음!)
+        var basicBrandCode = station.POLL_DIV_CD; // 상표 코드
 
-        // 2. [매핑] 유종(Fuel)
-        var fuelMap = {
-            "B027": "휘발유", "D047": "경유", "B034": "고급휘발유", "K015": "LPG"
-        };
-        var fuelName = fuelMap[window.currentProdcd] || "가격";
+        // (2) 마커 클릭 이벤트
+        kakao.maps.event.addListener(marker, 'click', function() {
 
-        // 3. [계산] 거리 단위 포맷팅 (입력값이 m 단위일 때)
-        var distVal = parseFloat(station.DISTANCE); // 예: 500, 1500
-        var distStr = "";
+            // (3) 모달창을 '로딩 중' 상태로 먼저 엽니다.
+            var modal = document.getElementById('stationDetailModal');
+            document.getElementById('modalStationBrand').textContent = ""; // 비우기
+            document.getElementById('modalStationName').textContent = "상세 정보 로딩 중...";
+            document.getElementById('modalStationPrice').textContent = ""; // 비우기
+            document.getElementById('modalStationDist').textContent = ""; // 비우기
+            document.getElementById('modalStationExtras').innerHTML = ""; // 비우기
+            modal.classList.add('open');
 
-        if (!isNaN(distVal)) {
-            if (distVal >= 1000) {
-                // 1000m 이상이면 km로 변환 (예: 1500 -> 1.5km)
-                distStr = (distVal / 1000).toFixed(1) + "km";
-            } else {
-                // 1000m 미만이면 그대로 m 표시 (예: 500 -> 500m)
-                distStr = Math.round(distVal) + "m";
-            }
-        }
+            // (4) Spring 서버에 상세 정보(detailById) 요청
+            fetch('/api/station-detail?id=' + stationId)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
+                        document.getElementById('modalStationName').textContent = "정보를 불러오는 데 실패했습니다.";
+                        return;
+                    }
 
-        // 4. [디자인] 인포윈도우 내용 (상표 -> 이름 -> 가격 -> 거리)
-        var content = `
-        <div style="padding:12px; min-width:160px; font-family: sans-serif; text-align: left;">
+                    var detail = data.RESULT.OIL[0];
 
-            <div style="color: #666; font-size: 11px; margin-bottom: 2px;">
-                ${brandName}
-            </div>
+                    // (5) 상세 정보로 모달 내용 채우기
 
-            <div style="font-size: 15px; font-weight: bold; color: #333; margin-bottom: 8px; letter-spacing: -0.5px;">
-                ${station.OS_NM}
-            </div>
+                    // 5-1. 상표 (Brand) 매핑
+                    var brandMap = {
+                        "SKE": "SK에너지", "GSC": "GS칼텍스", "HDO": "현대오일뱅크",
+                        "SOL": "S-OIL", "RTE": "자영알뜰", "RTX": "고속도로알뜰",
+                        "NHO": "농협알뜰", "ETC": "자가상표", "E1G": "E1", "SKG": "SKG"
+                    };
+                    // 상세 API의 POLL_DIV_CD가 더 정확할 수 있으므로 detail 것을 사용
+                    var brandName = brandMap[detail.POLL_DIV_CD] || detail.POLL_DIV_CD;
+                    document.getElementById('modalStationBrand').textContent = brandName;
 
-            <div style="font-size: 13px; margin-bottom: 5px; border-top: 1px solid #eee; padding-top: 5px;">
-                <span style="color: #555;">${fuelName}</span>:
-                <span style="color: #d9534f; font-weight: bold; font-size: 14px;">${station.PRICE}원</span>
-            </div>
+                    // 5-2. 이름
+                    document.getElementById('modalStationName').textContent = detail.OS_NM;
 
-            <div style="font-size: 12px; color: #888;">
-                <i class="fa-solid fa-location-dot" style="margin-right:3px;"></i>
-                거리: ${distStr}
-            </div>
+                    // 5-3. 가격 (가장 복잡)
+                    // 상세 API의 OIL_PRICE 리스트에서 현재 필터(window.currentProdcd)와
+                    // 일치하는 가격을 찾아야 합니다.
+                    var price = "정보 없음";
+                    var fuelName = "가격";
+                    var fuelMap = {"B027": "휘발유", "D047": "경유", "B034": "고급휘발유", "K015": "LPG"};
+                    fuelName = fuelMap[window.currentProdcd] || "가격";
 
-        </div>
-    `;
+                    if (detail.OIL_PRICE) {
+                        var priceInfo = detail.OIL_PRICE.find(p => p.PRODCD === window.currentProdcd);
+                        if (priceInfo) {
+                            price = priceInfo.PRICE;
+                        }
+                    }
+                    document.getElementById('modalStationPrice').innerHTML =
+                        `<span style="color: #555;">${fuelName}</span>: ` +
+                        `<span style="color: #d9534f; font-weight: bold; font-size: 1.1em;">${price}원</span>`;
 
-        // 인포윈도우 객체 생성
-        var infowindow = new kakao.maps.InfoWindow({
-            content: content,
-            removable: true
+                    // 5-4. 거리 (미리 저장해둔 'distance' 변수 사용)
+                    var distStr = "";
+                    var distVal = parseFloat(distance);
+                    if (!isNaN(distVal)) {
+                        if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
+                        else distStr = Math.round(distVal) + "m";
+                    }
+                    document.getElementById('modalStationDist').innerHTML =
+                        `<i class="fa-solid fa-location-dot" style="margin-right:3px;"></i> 거리: ${distStr}`;
+
+                    // 5-5. 추가 정보 (세차장, 편의점 등)
+                    var extras = [];
+                    if (detail.WASH_YN === 'Y') extras.push('세차장');
+                    if (detail.CONV_YN === 'Y') extras.push('편의점');
+                    if (detail.MAINT_YN === 'Y') extras.push('경정비');
+                    if (detail.LPG_YN === 'Y') extras.push('LPG충전');
+
+                    if (extras.length > 0) {
+                        document.getElementById('modalStationExtras').innerHTML =
+                            `<i class="fa-solid fa-check"></i> ${extras.join(' · ')}`;
+                    } else {
+                        document.getElementById('modalStationExtras').innerHTML = "추가 정보 없음";
+                    }
+                })
+                .catch(error => {
+                    console.error("상세 정보 요청 실패:", error);
+                    document.getElementById('modalStationName').textContent = "정보 로딩 실패";
+                });
         });
 
-        // 마커 클릭 이벤트
-        kakao.maps.event.addListener(marker, 'click', function() {
+        // [확인] 이 코드가 addInfoWindow 함수 바깥에 따로 있어야 합니다!
+        kakao.maps.event.addListener(map, 'click', function() {
+
+            // 1. 버블 인포윈도우 닫기
             if (currentInfoWindow) {
                 currentInfoWindow.close();
+                currentInfoWindow = null;
             }
-            infowindow.open(map, marker);
-            currentInfoWindow = infowindow;
+
+            // 2. [핵심] 주유소 정보 사이드 모달(stationDetailModal) 닫기
+            var stationModal = document.getElementById('stationDetailModal');
+
+            // 'open' 클래스가 있는지 확인하고, 있다면 제거해서 닫습니다.
+            if (stationModal && stationModal.classList.contains('open')) {
+                stationModal.classList.remove('open');
+            }
         });
     }
 
     // [추가] 실제 서버 요청 함수
+    // map.html
     function fetchDataFromServer(x, y) {
+        // 전역 변수에서 모든 필터 값 가져오기
         var radius = window.currentRadius;
         var prodcd = window.currentProdcd;
+        var sort = window.currentSort; // [추가]
 
-        var url = `/api/gas-stations?x=${x}&y=${y}&radius=${radius}&prodcd=${prodcd}`;
+        // [수정] URL에 'sort' 파라미터 추가
+        var url = `/api/gas-stations?x=${x}&y=${y}&radius=${radius}&prodcd=${prodcd}&sort=${sort}`;
 
         fetch(url)
             .then(response => response.json())
             .then(data => {
                 console.log("오피넷 데이터:", data);
+                displayGasStations(data); // 마커 및 리스트 표시
 
-                // [수정] 마커 표시 함수 호출!
-                displayGasStations(data);
-
-                // alert("주유소 " + data.RESULT.OIL.length + "개를 찾았습니다!"); // 이제 alert는 꺼도 됩니다.
+                // [추가] 첫 로드인 경우, 필터/리스트 모달을 엽니다.
+                if (isFirstLoad) {
+                    document.getElementById('filterModal').classList.add('open');
+                    isFirstLoad = false; // 플래그를 false로 변경
+                }
             })
             .catch(error => console.error("에러 발생:", error));
     }

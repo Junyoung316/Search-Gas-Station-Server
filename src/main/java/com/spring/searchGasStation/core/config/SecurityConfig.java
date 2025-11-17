@@ -28,7 +28,8 @@ public class SecurityConfig {
                             .requestMatchers(
                                     "/",
                                     "/map",
-                                    "/api/gas-stations"
+                                    "/api/gas-stations",
+                                    "/api/station-detail"
                             ).permitAll()
                 );
 
