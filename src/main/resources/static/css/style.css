@@ -14,6 +14,7 @@ body {
     display: flex; /* 가로 정렬 */
     justify-content: space-between; /* 양쪽 끝으로 정렬 */
     align-items: center; /* 세로 중앙 정렬 */
+    position: relative; /* 검색바 위치를 위해 */
 }
 
 /* 헤더의 h1 태그와 a 태그 스타일 */
@@ -31,21 +32,107 @@ body {
 }
 
 /* [수정] 헤더의 메뉴 아이템 (a 태그) 스타일 */
-.header-bar nav .menu-item {
-    color: white;           /* 아이콘 흰색 */
-    text-decoration: none;  /* 밑줄 제거 */
-    margin-left: 20px;      /* 아이콘 사이 간격 (조금 늘림) */
-
-    /* * [핵심] font-size로 아이콘의 크기를 조절합니다.
-     * (1em은 기본 글자 크기, 1.2em은 1.2배)
-     */
-    font-size: 1.2em;
-    cursor: pointer;
+.header-bar nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
 }
 
-/* 마우스를 올렸을 때 스타일 (선택 사항) */
+.header-bar nav .menu-item {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* 마우스를 올렸을 때 스타일 */
 .header-bar nav .menu-item:hover {
-    color: #ccc; /* 마우스 올리면 살짝 연한 회색으로 */
+    color: #ccc;
+}
+
+/* [추가] 모든 아이콘의 pointer-events를 none으로 */
+.header-bar nav .menu-item i {
+    pointer-events: none;
+}
+
+/* [추가] 검색/닫기 버튼 컨테이너 */
+.search-toggle-container {
+    position: relative;
+    width: 20px; /* 아이콘 크기 */
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 검색 버튼과 닫기 버튼을 같은 위치에 배치 */
+.search-toggle-container .search-btn,
+.search-toggle-container .close-btn {
+    position: absolute;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 기본 상태: 검색 버튼 보임, 닫기 버튼 숨김 */
+.search-toggle-container .search-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.search-toggle-container .close-btn {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 검색 활성화 시: 검색 버튼 숨김, 닫기 버튼 보임 */
+.header-bar.search-active .search-toggle-container .search-btn {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.header-bar.search-active .search-toggle-container .close-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 검색바 컨테이너 */
+.search-container {
+    position: absolute;
+    right: 55px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+/* 검색 활성화 시 */
+.header-bar.search-active .search-container {
+    width: 300px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 검색 입력창 */
+.search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.95em;
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-sizing: border-box;
+}
+
+.search-input::placeholder {
+    color: #999;
 }
 
 /* [추가] 모달 콘텐츠 내부 스타일 */

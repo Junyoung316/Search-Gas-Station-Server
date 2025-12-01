@@ -3,10 +3,22 @@
 <body>
 <header th:fragment="headerBar" class="header-bar">
     <h1><a th:href="@{/}">내 주변 주유소 찾기</a></h1>
+    
+    <!-- 검색바 컨테이너 -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="주유소 검색...">
+    </div>
+    
     <nav>
-        <a href="#" id="searchButton" class="menu-item">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </a>
+        <!-- 검색/닫기 버튼을 하나의 컨테이너로 -->
+        <div class="search-toggle-container">
+            <a href="#" id="searchButton" class="menu-item search-btn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+            <button id="searchCloseBtn" class="menu-item close-btn">
+                <i  class="fa-solid fa-times"></i>
+            </button>
+        </div>
 
         <a href="#" id="filterButton" class="menu-item">
             <i class="fa-solid fa-filter"></i>
