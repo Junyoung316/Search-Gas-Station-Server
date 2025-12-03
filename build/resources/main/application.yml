@@ -1,9 +1,17 @@
+logging.level.org.springframework.security: DEBUG
+
 server:
   port: 9000
   servlet:
     encoding:
       charset: UTF-8
       force: true
+    session:
+      cookie:
+        secure: false       # http 환경에서도 쿠키 허용 (필수!)
+        http-only: true     # 자바스크립트 접근 방지 (보안용)
+        same-site: lax      # 크롬 브라우저 호환성 해결 (strict면 가끔 막힘)
+        path: /             # 모든 경로에서 쿠키 사용
 
 spring:
   application:

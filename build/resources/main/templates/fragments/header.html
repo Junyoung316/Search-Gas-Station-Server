@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <header th:fragment="headerBar" class="header-bar">
     <h1><a th:href="@{/}">내 주변 주유소 찾기</a></h1>
@@ -16,13 +17,23 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
             </a>
             <button id="searchCloseBtn" class="menu-item close-btn">
-                <i  class="fa-solid fa-times"></i>
+                <i class="fa-solid fa-times"></i>
             </button>
         </div>
 
         <a href="#" id="filterButton" class="menu-item">
             <i class="fa-solid fa-filter"></i>
         </a>
+
+        <div sec:authorize="isAnonymous()" class="auth-buttons">
+            <a href="#" onclick="openLoginModal(); return false;" class="btn btn-login">로그인</a>
+            <a href="#" onclick="openSignupModal(); return false;" class="btn btn-signup">회원가입</a>
+        </div>
+
+        <div sec:authorize="isAuthenticated()">
+            <a href="/logout" class="btn btn-login">로그아웃</a>
+            <a href="/mypage" class="btn btn-signup">마이페이지</a>
+        </div>
     </nav>
 </header>
 </body>

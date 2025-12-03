@@ -53,6 +53,7 @@ body {
 /* 마우스를 올렸을 때 스타일 */
 .header-bar nav .menu-item:hover {
     color: #ccc;
+    transform: scale(1.1);
 }
 
 /* [추가] 모든 아이콘의 pointer-events를 none으로 */
@@ -88,8 +89,12 @@ body {
     visibility: hidden;
 }
 
-.searchCloseBtn {
+.search-toggle-container .close-btn i {
     color: #333;
+}
+
+.search-toggle-container .close-btn:hover {
+    transform: scale(1.1);
 }
 
 /* 검색 활성화 시: 검색 버튼 숨김, 닫기 버튼 보임 */
@@ -106,7 +111,7 @@ body {
 /* 검색바 컨테이너 */
 .search-container {
     position: absolute;
-    right: 55px;
+    right: 235px;
     top: 50%;
     transform: translateY(-50%);
     width: 0;
@@ -137,6 +142,44 @@ body {
 
 .search-input::placeholder {
     color: #999;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px; /* 버튼 사이 간격 */
+    align-items: center;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px; /* 살짝 둥근 모서리 */
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-login {
+    color: #ffffff; /* 흰색 텍스트 */
+    border: 1px solid rgba(255, 255, 255, 0.6); /* 반투명 흰색 테두리 */
+    background-color: transparent;
+}
+
+.btn-login:hover {
+    border-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1); /* 호버 시 살짝 밝아짐 */
+}
+
+.btn-signup {
+    background-color: #ffffff;
+    color: #222222; /* 헤더색과 맞춘 진한 회색 */
+    border: 1px solid #ffffff;
+    font-weight: bold;
+}
+
+.btn-signup:hover {
+    background-color: #f0f0f0; /* 살짝 어두워짐 */
 }
 
 /* [추가] 모달 콘텐츠 내부 스타일 */

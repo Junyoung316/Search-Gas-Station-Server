@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Gas station</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
-
+    <link rel="stylesheet" th:href="@{/css/LoginStyle.css}"> </head>
+    <link rel="stylesheet" th:href="@{/css/SignupStyle.css}"> </head>
+    <link rel="stylesheet" th:href="@{/css/ToastMsgStyle.css}"> </head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
 
     <style>
         /* 기존 #map 스타일은 유지... */
@@ -81,6 +86,7 @@
 
         .side-modal .close-btn:hover {
             color: #ff0000;
+            transform: scale(1.1);
         }
 
         .side-modal .modal-content {
@@ -121,6 +127,7 @@
 
         .bottom-sheet .close-btn:hover {
             color: #ff0000;
+            transform: scale(1.1);
         }
 
         .bottom-sheet .sheet-content {
@@ -196,6 +203,96 @@
     <div id="map">
     </div>
 </main>
+
+<div sec:authorize="isAuthenticated()" id="welcome-toast" class="toast-hidden">
+    <div class="toast-content">
+        <i class="fa-regular fa-face-smile"></i>
+        <span class="nickname-highlight">
+            <span sec:authentication="principal.nickname">사용자</span>님
+        </span>
+        <br>환영합니다!
+    </div>
+</div>
+
+<div id="loginModal" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2>로그인</h2>
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+        </div>
+
+        <div class="modal-body">
+            <div class="icon-area">
+                <div class="user-icon-circle">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+            </div>
+            <p class="guide-text">주유소 찾기 서비스를 이용하시려면 로그인이 필요합니다.</p>
+
+            <form class="login-form" th:action="@{/login-proc}" method="post">
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" placeholder="user@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" placeholder="●●●●●●●●" required>
+                </div>
+                <button type="submit" class="login-submit-btn">로그인 하기</button>
+            </form>
+
+            <div class="modal-footer">
+                <span>계정이 없으신가요?</span>
+                <a href="#" class="signup-link" onclick="closeLoginModal(); openSignupModal(); return false;">회원가입</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="signupModal" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2>회원가입</h2>
+            <span class="close-btn" onclick="closeSignupModal()">&times;</span>
+        </div>
+
+        <div class="modal-body">
+            <div class="icon-area">
+                <div class="user-icon-circle">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+            </div>
+            <p class="guide-text">회원가입하고 나만의 주유소를 관리하세요.</p>
+
+            <form class="signup-form" th:action="@{/signup}" method="post">
+                <div class="form-group">
+                    <label for="signup-email">이메일</label>
+                    <input type="email" id="signup-email" name="email" placeholder="user@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">비밀번호</label>
+                    <input type="password" id="signup-password" name="password" placeholder="●●●●●●●●" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">비밀번호 확인</label>
+                    <input type="password" id="signup-confirm-password" placeholder="●●●●●●●●" required>
+                    <div id="pw-match-message" class="validation-msg"></div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-nickname">닉네임</label>
+                    <input type="text" id="signup-nickname" name="nickname" placeholder="별명 입력" required>
+                </div>
+
+                <button type="submit" class="signup-submit-btn">가입하기</button>
+            </form>
+
+            <div class="modal-footer">
+                <span>이미 계정이 있으신가요?</span>
+                <a href="#" class="login-link" onclick="closeSignupModal(); openLoginModal(); return false;">로그인</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div id="filterModal" class="side-modal">
     <a href="#" class="close-btn">&times;</a>
@@ -308,6 +405,24 @@
     window.currentUserLocation = null;
     window.currentSort = 1;
     let isFirstLoad = true;
+    
+    // 지도 상태 저장 변수 추가
+    var previousMapState = {
+        center: null,
+        level: null
+    };
+    
+    // 사용자의 초기 위치와 줄 레벨 저장
+    var initialMapState = {
+        center: null,
+        level: null
+    };
+    
+    // [추가] 현재 로드된 주유소 데이터 저장
+    window.currentStations = [];
+    
+    // [추가] 검색 마커 저장
+    window.searchMarker = null;
 
     var mapContainer = document.getElementById('map');
     var mapOption = {
@@ -315,6 +430,14 @@
         level: 3
     };
     var map = new kakao.maps.Map(mapContainer, mapOption);
+    
+    // modal.js에서 접근할 수 있도록 전역 변수로 설정
+    window.map = map;
+    window.previousMapState = previousMapState;
+    window.initialMapState = initialMapState;
+    window.markers = markers;
+    window.currentInfoWindow = currentInfoWindow;
+    window.isSearchMode = false;
 
     window.reloadMapData = function() {
         if (!window.currentUserLocation) {
@@ -343,17 +466,34 @@
 
         console.log("오피넷 요청 좌표(KATEC):", katecX, katecY);
 
-        fetchDataFromServer(katecX, katecY);
+        initGasStationMap(katecX, katecY);
     }
 
     // [추가] 상세 정보 표시 공통 함수
-    function showStationDetail(stationId, distance) {
+    function showStationDetail(stationId, distance, markerPosition) {
         var modal = document.getElementById('stationDetailModal');
         document.getElementById('modalStationBrand').textContent = "";
         document.getElementById('modalStationName').textContent = "상세 정보 로딩 중...";
         document.getElementById('modalStationPrice').textContent = "";
         document.getElementById('modalStationDist').textContent = "";
         document.getElementById('modalStationExtras').innerHTML = "";
+        
+        // 현재 지도 상태 저장 (검색이 아닌 경우에만 - 검색인 경우 initialMapState 사용)
+        if (!window.isSearchMode) {
+            previousMapState.center = map.getCenter();
+            previousMapState.level = map.getLevel();
+        }
+        
+        // 마커 위치로 지도 이동 및 확대 (자연스러운 애니메이션)
+        if (markerPosition) {
+            // 먼저 위치 이동을 시작하고
+            map.panTo(markerPosition);
+            // 약간의 딜레이 후 확대 (더 자연스러운 효과)
+            setTimeout(function() {
+                map.setLevel(3, {animate: true});
+            }, 300);
+        }
+        
         modal.classList.add('open');
 
         fetch('/api/station-detail?id=' + stationId)
@@ -418,6 +558,9 @@
                 document.getElementById('modalStationName').textContent = "정보 로딩 실패";
             });
     }
+    
+    // modal.js에서 사용할 수 있도록 전역 함수로 등록
+    window.showStationDetail = showStationDetail;
 
     var markers = [];
     var currentInfoWindow = null;
@@ -431,10 +574,14 @@
         if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
             console.log("주유소 데이터가 없습니다.");
             listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">주변 주유소 정보가 없습니다.</p>';
+            window.currentStations = [];
             return;
         }
 
         var stations = data.RESULT.OIL;
+        
+        // [추가] 현재 주유소 데이터 저장
+        window.currentStations = stations;
 
         var katecDef = "+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43 +units=m +no_defs";
 
@@ -476,11 +623,11 @@
             `;
             
             // [핵심] 리스트 아이템 클릭 이벤트 추가
-            (function(stationId, distance) {
+            (function(stationId, distance, position) {
                 listItem.addEventListener('click', function() {
-                    showStationDetail(stationId, distance);
+                    showStationDetail(stationId, distance, position);
                 });
-            })(station.UNI_ID, station.DISTANCE);
+            })(station.UNI_ID, station.DISTANCE, latlng);
             
             listContainer.appendChild(listItem);
 
@@ -503,9 +650,10 @@
     function addInfoWindow(marker, station) {
         var stationId = station.UNI_ID;
         var distance = station.DISTANCE;
+        var markerPosition = marker.getPosition();
 
         kakao.maps.event.addListener(marker, 'click', function() {
-            showStationDetail(stationId, distance);
+            showStationDetail(stationId, distance, markerPosition);
         });
     }
 
@@ -518,8 +666,62 @@
         var stationModal = document.getElementById('stationDetailModal');
         if (stationModal && stationModal.classList.contains('open')) {
             stationModal.classList.remove('open');
+            
+            // [추가] 지도를 이전 상태로 복원 (자연스러운 애니메이션)
+            if (previousMapState && previousMapState.center) {
+                // 먼저 줄 레벨 복원 (스멨 아웃)
+                map.setLevel(previousMapState.level, {animate: true});
+                // 약간의 딜레이 후 위치 이동
+                setTimeout(function() {
+                    map.panTo(previousMapState.center);
+                }, 300);
+            }
         }
     });
+
+    function initGasStationMap(x, y) {
+
+        // 1. 사용자 필터 설정 가져오기
+        fetch('/api/filter')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                // 비로그인 상태이거나 에러면 null 반환 (기본값 사용)
+                return null;
+            })
+            .then(data => {
+                if (data) {
+                    console.log("사용자 설정 로드 성공:", data);
+
+                    // 2. 전역 변수(window.xxx) 업데이트
+                    window.currentRadius = data.radius;
+                    window.currentProdcd = data.fuelType; // DTO 이름 주의 (fuelType -> prodcd)
+                    window.currentSort = data.sortType;
+
+                    // 3. 화면의 셀렉트 박스(UI)도 저장된 값으로 맞춰주기 (중요!)
+                    // (ID는 실제 HTML 태그의 ID로 맞춰주세요)
+                    const radiusSelect = document.getElementById('radius-select');
+                    const fuelSelect = document.getElementById('fuel-select');
+                    const sortSelect = document.getElementById('sort-select');
+
+                    if(radiusSelect) radiusSelect.value = data.radius;
+                    if(fuelSelect) fuelSelect.value = data.fuelType;
+                    if(sortSelect) sortSelect.value = data.sortType;
+                } else {
+                    console.log("저장된 설정 없음 (기본값 사용)");
+                    // 로그인 안 했으면 기존 window.current... 기본값 그대로 진행
+                }
+
+                // 4. 설정이 다 적용된 후에 -> 주유소 데이터 가져오기 실행!
+                fetchDataFromServer(x, y);
+            })
+            .catch(error => {
+                console.error("설정 로드 중 에러:", error);
+                // 에러가 나도 주유소 찾기는 실행되어야 함 (기본값으로)
+                fetchDataFromServer(x, y);
+            });
+    }
 
     function fetchDataFromServer(x, y) {
         var radius = window.currentRadius;
@@ -553,6 +755,13 @@
 
             window.reloadMapData();
 
+            // [추가] 초기 위치와 줄 레벨 저장
+            setTimeout(function() {
+                initialMapState.center = map.getCenter();
+                initialMapState.level = map.getLevel();
+                console.log('초기 맵 상태 저장:', initialMapState);
+            }, 1000);
+
         }, function(error) {
             console.error("위치 정보 가져오기 실패:", error);
             alert("위치 정보를 가져올 수 없습니다. 기본 위치(서울시청)로 시작합니다.");
@@ -566,6 +775,121 @@
         window.currentUserLocation = { lat: 37.566826, lon: 126.9786567 };
         window.reloadMapData();
     }
+
+    const loginModal = document.getElementById('loginModal');
+    const signupModal = document.getElementById('signupModal');
+
+    // 폼 요소 가져오기 (초기화를 위해 필요)
+    const loginForm = document.querySelector('.login-form');
+    const signupForm = document.querySelector('.signup-form');
+    const pwInput = document.getElementById('signup-password');
+    const confirmPwInput = document.getElementById('signup-confirm-password');
+    const signupBtn = document.querySelector('.signup-submit-btn'); // 가입 버튼
+
+    // 비밀번호 확인 메시지 요소 (회원가입 초기화용)
+    const matchMsg = document.getElementById('pw-match-message');
+
+    /* ▼▼▼ 로그인 모달 열기 함수 수정 ▼▼▼ */
+    function openLoginModal() {
+        loginModal.style.display = 'flex';
+        // 폼 초기화 (내용 싹 지우기)
+        if(loginForm) loginForm.reset();
+    }
+
+    function closeLoginModal() {
+        loginModal.style.display = 'none';
+    }
+
+    /* ▼▼▼ 회원가입 모달 열기 함수 수정 ▼▼▼ */
+    function openSignupModal() {
+        signupModal.style.display = 'flex';
+
+        // 1. 폼 내용 초기화
+        if(signupForm) signupForm.reset();
+
+        // 2. 비밀번호 확인 메시지도 초기화 (중요!)
+        if(matchMsg) {
+            matchMsg.textContent = '';
+            matchMsg.className = 'validation-msg';
+        }
+    }
+
+    function closeSignupModal() {
+        signupModal.style.display = 'none';
+    }
+
+    // 배경 클릭 시 닫기
+    window.onclick = function(event) {
+        if (event.target === loginModal) { closeLoginModal(); }
+        if (event.target === signupModal) { closeSignupModal(); }
+    }
+
+    function checkPasswordMatch() {
+        const pw1 = pwInput.value;
+        const pw2 = confirmPwInput.value;
+
+        // 1. 둘 다 비어있으면 메시지 삭제
+        if (pw1 === '' && pw2 === '') {
+            matchMsg.textContent = '';
+            matchMsg.className = 'validation-msg'; // 클래스 초기화
+            return;
+        }
+
+        // 2. 비밀번호 확인란에 입력이 시작됐을 때 검사
+        if (pw2.length > 0) {
+            if (pw1 === pw2) {
+                matchMsg.textContent = '비밀번호가 일치합니다.';
+                matchMsg.className = 'validation-msg valid'; // 초록색
+                // signupBtn.disabled = false; // (선택사항) 버튼 활성화
+            } else {
+                matchMsg.textContent = '비밀번호가 일치하지 않습니다.';
+                matchMsg.className = 'validation-msg invalid'; // 빨간색
+                // signupBtn.disabled = true; // (선택사항) 버튼 비활성화
+            }
+        } else {
+            // 확인란을 지웠을 때
+            matchMsg.textContent = '';
+            matchMsg.className = 'validation-msg';
+        }
+    }
+
+    // 두 입력창 모두에 이벤트 연결 (둘 중 하나만 고쳐도 다시 검사하도록)
+    pwInput.addEventListener('input', checkPasswordMatch);
+    confirmPwInput.addEventListener('input', checkPasswordMatch);
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. 주소창의 파라미터 확인 (?loginSuccess=true)
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get('loginSuccess') === 'true') {
+            const toast = document.getElementById('welcome-toast');
+
+            // 2. 메시지 창이 존재한다면 (로그인 상태라면)
+            if (toast) {
+                // (1) 서서히 나타나기
+                setTimeout(() => {
+                    toast.classList.add('show');
+                    toast.classList.remove('toast-hidden');
+                }, 100);
+
+                // (2) 2.5초 뒤에 서서히 사라지기
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+
+                // (3) 완전히 사라지면 display:none 처리 (선택)
+                setTimeout(() => {
+                    toast.classList.add('toast-hidden');
+                }, 3000);
+            }
+
+            // 3. 주소창 깔끔하게 정리 (URL에서 ?loginSuccess=true 제거)
+            // 이렇게 안 하면 새로고침 할 때마다 환영 메시지가 또 뜸
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    });
+
 </script>
 
 <script th:src="@{/js/modal.js}"></script>
