@@ -400,45 +400,39 @@
 </script>
 
 <script>
+    // 1. 전역 변수 설정
     window.currentRadius = 3000;
     window.currentProdcd = 'B027';
-    window.currentUserLocation = null;
     window.currentSort = 1;
+    window.currentUserLocation = null;
     let isFirstLoad = true;
-    
-    // 지도 상태 저장 변수 추가
-    var previousMapState = {
-        center: null,
-        level: null
-    };
-    
-    // 사용자의 초기 위치와 줄 레벨 저장
-    var initialMapState = {
-        center: null,
-        level: null
-    };
-    
-    // [추가] 현재 로드된 주유소 데이터 저장
+
+    // 지도 상태 저장 변수
+    var previousMapState = { center: null, level: null };
+    var initialMapState = { center: null, level: null };
+
     window.currentStations = [];
-    
-    // [추가] 검색 마커 저장
     window.searchMarker = null;
 
+    // 2. 지도 생성
     var mapContainer = document.getElementById('map');
     var mapOption = {
         center: new kakao.maps.LatLng(37.566826, 126.9786567),
         level: 3
     };
     var map = new kakao.maps.Map(mapContainer, mapOption);
-    
-    // modal.js에서 접근할 수 있도록 전역 변수로 설정
+
+    // modal.js 연동용 전역 변수
     window.map = map;
     window.previousMapState = previousMapState;
     window.initialMapState = initialMapState;
-    window.markers = markers;
-    window.currentInfoWindow = currentInfoWindow;
+    window.markers = []; // markers 초기화 수정
+    window.currentInfoWindow = null;
     window.isSearchMode = false;
 
+    // -------------------------------------------------------------
+    // [핵심 1] 지도 데이터 리로드 (위치 변경 시 호출)
+    // -------------------------------------------------------------
     window.reloadMapData = function() {
         if (!window.currentUserLocation) {
             console.log("아직 사용자 위치를 받아오지 못했습니다.");
@@ -449,6 +443,7 @@
         var lon = window.currentUserLocation.lon;
         var radius = window.currentRadius;
 
+        // 반경에 따른 줌 레벨 조정
         var zoomLevel = 4;
         if (radius <= 1000) zoomLevel = 5;
         else if (radius <= 3000) zoomLevel = 6;
@@ -458,6 +453,7 @@
         map.setLevel(zoomLevel, {animate: true});
         map.setCenter(new kakao.maps.LatLng(lat, lon));
 
+        // 좌표 변환 (WGS84 -> KATEC)
         var katecDef = "+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43 +units=m +no_defs";
         var result = proj4("WGS84", katecDef, [lon, lat]);
 
@@ -466,263 +462,55 @@
 
         console.log("오피넷 요청 좌표(KATEC):", katecX, katecY);
 
+        // ★ 여기서 초기화 함수 호출!
         initGasStationMap(katecX, katecY);
     }
 
-    // [추가] 상세 정보 표시 공통 함수
-    function showStationDetail(stationId, distance, markerPosition) {
-        var modal = document.getElementById('stationDetailModal');
-        document.getElementById('modalStationBrand').textContent = "";
-        document.getElementById('modalStationName').textContent = "상세 정보 로딩 중...";
-        document.getElementById('modalStationPrice').textContent = "";
-        document.getElementById('modalStationDist').textContent = "";
-        document.getElementById('modalStationExtras').innerHTML = "";
-        
-        // 현재 지도 상태 저장 (검색이 아닌 경우에만 - 검색인 경우 initialMapState 사용)
-        if (!window.isSearchMode) {
-            previousMapState.center = map.getCenter();
-            previousMapState.level = map.getLevel();
-        }
-        
-        // 마커 위치로 지도 이동 및 확대 (자연스러운 애니메이션)
-        if (markerPosition) {
-            // 먼저 위치 이동을 시작하고
-            map.panTo(markerPosition);
-            // 약간의 딜레이 후 확대 (더 자연스러운 효과)
-            setTimeout(function() {
-                map.setLevel(3, {animate: true});
-            }, 300);
-        }
-        
-        modal.classList.add('open');
-
-        fetch('/api/station-detail?id=' + stationId)
-            .then(response => response.json())
-            .then(data => {
-                if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
-                    document.getElementById('modalStationName').textContent = "정보를 불러오는 데 실패했습니다.";
-                    return;
-                }
-
-                var detail = data.RESULT.OIL[0];
-
-                var brandMap = {
-                    "SKE": "SK에너지", "GSC": "GS칼텍스", "HDO": "현대오일뱅크",
-                    "SOL": "S-OIL", "RTE": "자영알뜰", "RTX": "고속도로알뜰",
-                    "NHO": "농협알뜰", "ETC": "자가상표", "E1G": "E1", "SKG": "SKG"
-                };
-                var brandName = brandMap[detail.POLL_DIV_CD] || detail.POLL_DIV_CD;
-                document.getElementById('modalStationBrand').textContent = brandName;
-
-                document.getElementById('modalStationName').textContent = detail.OS_NM;
-
-                var price = "정보 없음";
-                var fuelName = "가격";
-                var fuelMap = {"B027": "휘발유", "D047": "경유", "B034": "고급휘발유", "K015": "LPG"};
-                fuelName = fuelMap[window.currentProdcd] || "가격";
-
-                if (detail.OIL_PRICE) {
-                    var priceInfo = detail.OIL_PRICE.find(p => p.PRODCD === window.currentProdcd);
-                    if (priceInfo) {
-                        price = priceInfo.PRICE;
-                    }
-                }
-                document.getElementById('modalStationPrice').innerHTML =
-                    `<span style="color: #555;">${fuelName}</span>: ` +
-                    `<span style="color: #d9534f; font-weight: bold; font-size: 1.1em;">${price}원</span>`;
-
-                var distStr = "";
-                var distVal = parseFloat(distance);
-                if (!isNaN(distVal)) {
-                    if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
-                    else distStr = Math.round(distVal) + "m";
-                }
-                document.getElementById('modalStationDist').innerHTML =
-                    `<i class="fa-solid fa-location-dot" style="margin-right:3px;"></i> 거리: ${distStr}`;
-
-                var extras = [];
-                if (detail.WASH_YN === 'Y') extras.push('세차장');
-                if (detail.CONV_YN === 'Y') extras.push('편의점');
-                if (detail.MAINT_YN === 'Y') extras.push('경정비');
-                if (detail.LPG_YN === 'Y') extras.push('LPG충전');
-
-                if (extras.length > 0) {
-                    document.getElementById('modalStationExtras').innerHTML =
-                        `<i class="fa-solid fa-check"></i> ${extras.join(' · ')}`;
-                } else {
-                    document.getElementById('modalStationExtras').innerHTML = "추가 정보 없음";
-                }
-            })
-            .catch(error => {
-                console.error("상세 정보 요청 실패:", error);
-                document.getElementById('modalStationName').textContent = "정보 로딩 실패";
-            });
-    }
-    
-    // modal.js에서 사용할 수 있도록 전역 함수로 등록
-    window.showStationDetail = showStationDetail;
-
-    var markers = [];
-    var currentInfoWindow = null;
-
-    function displayGasStations(data) {
-        removeMarkers();
-
-        var listContainer = document.getElementById('stationListContainer');
-        listContainer.innerHTML = "";
-
-        if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
-            console.log("주유소 데이터가 없습니다.");
-            listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">주변 주유소 정보가 없습니다.</p>';
-            window.currentStations = [];
-            return;
-        }
-
-        var stations = data.RESULT.OIL;
-        
-        // [추가] 현재 주유소 데이터 저장
-        window.currentStations = stations;
-
-        var katecDef = "+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43 +units=m +no_defs";
-
-        for (var i = 0; i < stations.length; i++) {
-            var station = stations[i];
-
-            var x = parseFloat(station.GIS_X_COOR);
-            var y = parseFloat(station.GIS_Y_COOR);
-
-            var converted = proj4(katecDef, "WGS84", [x, y]);
-
-            var lon = converted[0];
-            var lat = converted[1];
-
-            var latlng = new kakao.maps.LatLng(lat, lon);
-
-            var marker = new kakao.maps.Marker({
-                map: map,
-                position: latlng,
-                title: station.OS_NM
-            });
-
-            markers.push(marker);
-
-            var distStr = "";
-            var distVal = parseFloat(station.DISTANCE);
-            if (!isNaN(distVal)) {
-                if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
-                else distStr = Math.round(distVal) + "m";
-            }
-
-            // [수정] 리스트 아이템을 DOM 요소로 생성
-            var listItem = document.createElement('div');
-            listItem.className = 'list-item';
-            listItem.innerHTML = `
-                <span class="dist">${distStr}</span>
-                <b>${station.OS_NM}</b><br>
-                <span class="price">${station.PRICE}원</span>
-            `;
-            
-            // [핵심] 리스트 아이템 클릭 이벤트 추가
-            (function(stationId, distance, position) {
-                listItem.addEventListener('click', function() {
-                    showStationDetail(stationId, distance, position);
-                });
-            })(station.UNI_ID, station.DISTANCE, latlng);
-            
-            listContainer.appendChild(listItem);
-
-            addInfoWindow(marker, station);
-        }
-    }
-
-    function removeMarkers() {
-        for (var i = 0; i < markers.length; i++) {
-            markers[i].setMap(null);
-        }
-        markers = [];
-
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
-            currentInfoWindow = null;
-        }
-    }
-
-    function addInfoWindow(marker, station) {
-        var stationId = station.UNI_ID;
-        var distance = station.DISTANCE;
-        var markerPosition = marker.getPosition();
-
-        kakao.maps.event.addListener(marker, 'click', function() {
-            showStationDetail(stationId, distance, markerPosition);
-        });
-    }
-
-    kakao.maps.event.addListener(map, 'click', function() {
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
-            currentInfoWindow = null;
-        }
-
-        var stationModal = document.getElementById('stationDetailModal');
-        if (stationModal && stationModal.classList.contains('open')) {
-            stationModal.classList.remove('open');
-            
-            // [추가] 지도를 이전 상태로 복원 (자연스러운 애니메이션)
-            if (previousMapState && previousMapState.center) {
-                // 먼저 줄 레벨 복원 (스멨 아웃)
-                map.setLevel(previousMapState.level, {animate: true});
-                // 약간의 딜레이 후 위치 이동
-                setTimeout(function() {
-                    map.panTo(previousMapState.center);
-                }, 300);
-            }
-        }
-    });
-
+    // -------------------------------------------------------------
+    // [핵심 2] 사용자 설정 로드 및 초기화
+    // -------------------------------------------------------------
     function initGasStationMap(x, y) {
-
-        // 1. 사용자 필터 설정 가져오기
+        // 1. 서버에서 내 설정 가져오기
         fetch('/api/filter')
             .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                // 비로그인 상태이거나 에러면 null 반환 (기본값 사용)
-                return null;
+                if (response.ok) return response.json();
+                return null; // 비로그인 or 에러
             })
             .then(data => {
                 if (data) {
                     console.log("사용자 설정 로드 성공:", data);
 
-                    // 2. 전역 변수(window.xxx) 업데이트
+                    // 2. 전역 변수 업데이트
                     window.currentRadius = data.radius;
-                    window.currentProdcd = data.fuelType; // DTO 이름 주의 (fuelType -> prodcd)
+                    window.currentProdcd = data.fuelType;
                     window.currentSort = data.sortType;
 
-                    // 3. 화면의 셀렉트 박스(UI)도 저장된 값으로 맞춰주기 (중요!)
-                    // (ID는 실제 HTML 태그의 ID로 맞춰주세요)
-                    const radiusSelect = document.getElementById('radius-select');
-                    const fuelSelect = document.getElementById('fuel-select');
-                    const sortSelect = document.getElementById('sort-select');
-
-                    if(radiusSelect) radiusSelect.value = data.radius;
-                    if(fuelSelect) fuelSelect.value = data.fuelType;
-                    if(sortSelect) sortSelect.value = data.sortType;
+                    // 3. UI 업데이트 (라디오 버튼 체크하기)
+                    checkRadioButton('radius', data.radius);
+                    checkRadioButton('prodcd', data.fuelType);
+                    checkRadioButton('sort', data.sortType);
                 } else {
                     console.log("저장된 설정 없음 (기본값 사용)");
-                    // 로그인 안 했으면 기존 window.current... 기본값 그대로 진행
                 }
 
-                // 4. 설정이 다 적용된 후에 -> 주유소 데이터 가져오기 실행!
+                // 4. 설정 적용 후 주유소 검색 실행
                 fetchDataFromServer(x, y);
             })
             .catch(error => {
                 console.error("설정 로드 중 에러:", error);
-                // 에러가 나도 주유소 찾기는 실행되어야 함 (기본값으로)
-                fetchDataFromServer(x, y);
+                fetchDataFromServer(x, y); // 에러나도 검색은 진행
             });
     }
 
+    // 라디오 버튼 체크 헬퍼 함수
+    function checkRadioButton(name, value) {
+        const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+        if (radio) radio.checked = true;
+    }
+
+    // -------------------------------------------------------------
+    // [핵심 3] 오피넷 데이터 가져오기
+    // -------------------------------------------------------------
     function fetchDataFromServer(x, y) {
         var radius = window.currentRadius;
         var prodcd = window.currentProdcd;
@@ -744,152 +532,276 @@
             .catch(error => console.error("에러 발생:", error));
     }
 
+    // -------------------------------------------------------------
+    // [핵심 4] 필터 적용 버튼 클릭 시 (저장 및 리로드)
+    // -------------------------------------------------------------
+    document.getElementById('applyFilterButton').addEventListener('click', function() {
+        // 1. 현재 체크된 라디오 버튼 값 가져오기
+        const radius = document.querySelector('input[name="radius"]:checked').value;
+        const prodcd = document.querySelector('input[name="prodcd"]:checked').value;
+        const sort = document.querySelector('input[name="sort"]:checked').value;
+
+        // 2. 전역 변수 업데이트
+        window.currentRadius = parseInt(radius);
+        window.currentProdcd = prodcd;
+        window.currentSort = parseInt(sort);
+
+        // 3. 서버에 저장 요청 (비동기)
+        fetch('/api/filter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                radius: window.currentRadius,
+                fuelType: window.currentProdcd,
+                sortType: String(window.currentSort)
+            })
+        }).then(res => {
+            if(res.ok) console.log("필터 설정 저장 완료");
+        });
+
+        // 4. 지도 새로고침 (주유소 다시 찾기)
+        window.reloadMapData();
+
+        // 5. 모달 닫기 (UI 처리)
+        document.getElementById('filterModal').classList.remove('open');
+        document.getElementById('modalOverlay').classList.remove('open');
+    });
+
+    // -------------------------------------------------------------
+    // 지도 마커 및 리스트 표시 로직 (기존 유지)
+    // -------------------------------------------------------------
+    function displayGasStations(data) {
+        removeMarkers();
+
+        var listContainer = document.getElementById('stationListContainer');
+        listContainer.innerHTML = "";
+
+        if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
+            listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">주변 주유소 정보가 없습니다.</p>';
+            window.currentStations = [];
+            return;
+        }
+
+        var stations = data.RESULT.OIL;
+        window.currentStations = stations;
+
+        var katecDef = "+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43 +units=m +no_defs";
+
+        for (var i = 0; i < stations.length; i++) {
+            var station = stations[i];
+            var x = parseFloat(station.GIS_X_COOR);
+            var y = parseFloat(station.GIS_Y_COOR);
+            var converted = proj4(katecDef, "WGS84", [x, y]);
+            var latlng = new kakao.maps.LatLng(converted[1], converted[0]);
+
+            var marker = new kakao.maps.Marker({
+                map: map,
+                position: latlng,
+                title: station.OS_NM
+            });
+            window.markers.push(marker);
+
+            var distStr = "";
+            var distVal = parseFloat(station.DISTANCE);
+            if (!isNaN(distVal)) {
+                if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
+                else distStr = Math.round(distVal) + "m";
+            }
+
+            var listItem = document.createElement('div');
+            listItem.className = 'list-item';
+            listItem.innerHTML = `
+                <span class="dist">${distStr}</span>
+                <b>${station.OS_NM}</b><br>
+                <span class="price">${station.PRICE}원</span>
+            `;
+
+            (function(stationId, distance, position) {
+                listItem.addEventListener('click', function() {
+                    showStationDetail(stationId, distance, position);
+                });
+            })(station.UNI_ID, station.DISTANCE, latlng);
+
+            listContainer.appendChild(listItem);
+            addInfoWindow(marker, station);
+        }
+    }
+
+    function removeMarkers() {
+        for (var i = 0; i < window.markers.length; i++) {
+            window.markers[i].setMap(null);
+        }
+        window.markers = [];
+        if (window.currentInfoWindow) {
+            window.currentInfoWindow.close();
+            window.currentInfoWindow = null;
+        }
+    }
+
+    function addInfoWindow(marker, station) {
+        var stationId = station.UNI_ID;
+        var distance = station.DISTANCE;
+        var markerPosition = marker.getPosition();
+        kakao.maps.event.addListener(marker, 'click', function() {
+            showStationDetail(stationId, distance, markerPosition);
+        });
+    }
+
+    // 상세 정보 보기 함수 (기존 유지)
+    function showStationDetail(stationId, distance, markerPosition) {
+        var modal = document.getElementById('stationDetailModal');
+        document.getElementById('modalStationBrand').textContent = "";
+        document.getElementById('modalStationName').textContent = "상세 정보 로딩 중...";
+        document.getElementById('modalStationPrice').textContent = "";
+        document.getElementById('modalStationDist').textContent = "";
+        document.getElementById('modalStationExtras').innerHTML = "";
+
+        if (!window.isSearchMode) {
+            window.previousMapState.center = map.getCenter();
+            window.previousMapState.level = map.getLevel();
+        }
+
+        if (markerPosition) {
+            map.panTo(markerPosition);
+            setTimeout(function() { map.setLevel(3, {animate: true}); }, 300);
+        }
+
+        modal.classList.add('open');
+        document.getElementById('modalOverlay').classList.add('open'); // 배경 오버레이도 같이 열기 (선택사항)
+
+        fetch('/api/station-detail?id=' + stationId)
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.RESULT || !data.RESULT.OIL || data.RESULT.OIL.length === 0) {
+                    document.getElementById('modalStationName').textContent = "정보를 불러오는 데 실패했습니다.";
+                    return;
+                }
+                var detail = data.RESULT.OIL[0];
+                var brandMap = { "SKE": "SK에너지", "GSC": "GS칼텍스", "HDO": "현대오일뱅크", "SOL": "S-OIL", "RTE": "자영알뜰", "RTX": "고속도로알뜰", "NHO": "농협알뜰", "ETC": "자가상표", "E1G": "E1", "SKG": "SKG" };
+
+                document.getElementById('modalStationBrand').textContent = brandMap[detail.POLL_DIV_CD] || detail.POLL_DIV_CD;
+                document.getElementById('modalStationName').textContent = detail.OS_NM;
+
+                var price = "정보 없음";
+                var fuelName = "가격";
+                var fuelMap = {"B027": "휘발유", "D047": "경유", "B034": "고급휘발유", "K015": "LPG"};
+                fuelName = fuelMap[window.currentProdcd] || "가격";
+
+                if (detail.OIL_PRICE) {
+                    var priceInfo = detail.OIL_PRICE.find(p => p.PRODCD === window.currentProdcd);
+                    if (priceInfo) price = priceInfo.PRICE;
+                }
+                document.getElementById('modalStationPrice').innerHTML = `<span style="color: #555;">${fuelName}</span>: <span style="color: #d9534f; font-weight: bold; font-size: 1.1em;">${price}원</span>`;
+
+                var distStr = "";
+                var distVal = parseFloat(distance);
+                if (!isNaN(distVal)) {
+                    if (distVal >= 1000) distStr = (distVal / 1000).toFixed(1) + "km";
+                    else distStr = Math.round(distVal) + "m";
+                }
+                document.getElementById('modalStationDist').innerHTML = `<i class="fa-solid fa-location-dot" style="margin-right:3px;"></i> 거리: ${distStr}`;
+
+                var extras = [];
+                if (detail.WASH_YN === 'Y') extras.push('세차장');
+                if (detail.CONV_YN === 'Y') extras.push('편의점');
+                if (detail.MAINT_YN === 'Y') extras.push('경정비');
+                if (detail.LPG_YN === 'Y') extras.push('LPG충전');
+
+                if (extras.length > 0) document.getElementById('modalStationExtras').innerHTML = `<i class="fa-solid fa-check"></i> ${extras.join(' · ')}`;
+                else document.getElementById('modalStationExtras').innerHTML = "추가 정보 없음";
+            });
+    }
+    window.showStationDetail = showStationDetail;
+
+    // -------------------------------------------------------------
+    // 위치 정보 가져오기 (시작점)
+    // -------------------------------------------------------------
     if (navigator.geolocation) {
-
         navigator.geolocation.getCurrentPosition(function(position) {
-
             window.currentUserLocation = {
                 lat: position.coords.latitude,
                 lon: position.coords.longitude
             };
+            window.reloadMapData(); // -> initGasStationMap 호출 -> fetchDataFromServer 호출
 
-            window.reloadMapData();
-
-            // [추가] 초기 위치와 줄 레벨 저장
             setTimeout(function() {
                 initialMapState.center = map.getCenter();
                 initialMapState.level = map.getLevel();
-                console.log('초기 맵 상태 저장:', initialMapState);
             }, 1000);
-
         }, function(error) {
-            console.error("위치 정보 가져오기 실패:", error);
-            alert("위치 정보를 가져올 수 없습니다. 기본 위치(서울시청)로 시작합니다.");
-
+            console.error("위치 정보 실패:", error);
+            alert("위치 정보를 가져올 수 없습니다. 기본 위치로 시작합니다.");
             window.currentUserLocation = { lat: 37.566826, lon: 126.9786567 };
             window.reloadMapData();
         });
-
     } else {
-        alert("Geolocation을 지원하지 않습니다. 기본 위치(서울시청)로 시작합니다.");
+        alert("Geolocation을 지원하지 않습니다.");
         window.currentUserLocation = { lat: 37.566826, lon: 126.9786567 };
         window.reloadMapData();
     }
 
+    // -------------------------------------------------------------
+    // 기타 모달 및 로그인 관련 스크립트 (기존 유지)
+    // -------------------------------------------------------------
     const loginModal = document.getElementById('loginModal');
     const signupModal = document.getElementById('signupModal');
-
-    // 폼 요소 가져오기 (초기화를 위해 필요)
     const loginForm = document.querySelector('.login-form');
     const signupForm = document.querySelector('.signup-form');
     const pwInput = document.getElementById('signup-password');
     const confirmPwInput = document.getElementById('signup-confirm-password');
-    const signupBtn = document.querySelector('.signup-submit-btn'); // 가입 버튼
-
-    // 비밀번호 확인 메시지 요소 (회원가입 초기화용)
     const matchMsg = document.getElementById('pw-match-message');
 
-    /* ▼▼▼ 로그인 모달 열기 함수 수정 ▼▼▼ */
     function openLoginModal() {
         loginModal.style.display = 'flex';
-        // 폼 초기화 (내용 싹 지우기)
         if(loginForm) loginForm.reset();
     }
+    function closeLoginModal() { loginModal.style.display = 'none'; }
 
-    function closeLoginModal() {
-        loginModal.style.display = 'none';
-    }
-
-    /* ▼▼▼ 회원가입 모달 열기 함수 수정 ▼▼▼ */
     function openSignupModal() {
         signupModal.style.display = 'flex';
-
-        // 1. 폼 내용 초기화
         if(signupForm) signupForm.reset();
-
-        // 2. 비밀번호 확인 메시지도 초기화 (중요!)
-        if(matchMsg) {
-            matchMsg.textContent = '';
-            matchMsg.className = 'validation-msg';
-        }
+        if(matchMsg) { matchMsg.textContent = ''; matchMsg.className = 'validation-msg'; }
     }
+    function closeSignupModal() { signupModal.style.display = 'none'; }
 
-    function closeSignupModal() {
-        signupModal.style.display = 'none';
-    }
-
-    // 배경 클릭 시 닫기
     window.onclick = function(event) {
-        if (event.target === loginModal) { closeLoginModal(); }
-        if (event.target === signupModal) { closeSignupModal(); }
+        if (event.target === loginModal) closeLoginModal();
+        if (event.target === signupModal) closeSignupModal();
     }
 
     function checkPasswordMatch() {
         const pw1 = pwInput.value;
         const pw2 = confirmPwInput.value;
-
-        // 1. 둘 다 비어있으면 메시지 삭제
         if (pw1 === '' && pw2 === '') {
-            matchMsg.textContent = '';
-            matchMsg.className = 'validation-msg'; // 클래스 초기화
-            return;
+            matchMsg.textContent = ''; matchMsg.className = 'validation-msg'; return;
         }
-
-        // 2. 비밀번호 확인란에 입력이 시작됐을 때 검사
         if (pw2.length > 0) {
             if (pw1 === pw2) {
-                matchMsg.textContent = '비밀번호가 일치합니다.';
-                matchMsg.className = 'validation-msg valid'; // 초록색
-                // signupBtn.disabled = false; // (선택사항) 버튼 활성화
+                matchMsg.textContent = '비밀번호가 일치합니다.'; matchMsg.className = 'validation-msg valid';
             } else {
-                matchMsg.textContent = '비밀번호가 일치하지 않습니다.';
-                matchMsg.className = 'validation-msg invalid'; // 빨간색
-                // signupBtn.disabled = true; // (선택사항) 버튼 비활성화
+                matchMsg.textContent = '비밀번호가 일치하지 않습니다.'; matchMsg.className = 'validation-msg invalid';
             }
         } else {
-            // 확인란을 지웠을 때
-            matchMsg.textContent = '';
-            matchMsg.className = 'validation-msg';
+            matchMsg.textContent = ''; matchMsg.className = 'validation-msg';
         }
     }
+    if(pwInput) pwInput.addEventListener('input', checkPasswordMatch);
+    if(confirmPwInput) confirmPwInput.addEventListener('input', checkPasswordMatch);
 
-    // 두 입력창 모두에 이벤트 연결 (둘 중 하나만 고쳐도 다시 검사하도록)
-    pwInput.addEventListener('input', checkPasswordMatch);
-    confirmPwInput.addEventListener('input', checkPasswordMatch);
-
+    // 토스트 메시지
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. 주소창의 파라미터 확인 (?loginSuccess=true)
         const urlParams = new URLSearchParams(window.location.search);
-
         if (urlParams.get('loginSuccess') === 'true') {
             const toast = document.getElementById('welcome-toast');
-
-            // 2. 메시지 창이 존재한다면 (로그인 상태라면)
             if (toast) {
-                // (1) 서서히 나타나기
-                setTimeout(() => {
-                    toast.classList.add('show');
-                    toast.classList.remove('toast-hidden');
-                }, 100);
-
-                // (2) 2.5초 뒤에 서서히 사라지기
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2000);
-
-                // (3) 완전히 사라지면 display:none 처리 (선택)
-                setTimeout(() => {
-                    toast.classList.add('toast-hidden');
-                }, 3000);
+                setTimeout(() => { toast.classList.add('show'); toast.classList.remove('toast-hidden'); }, 100);
+                setTimeout(() => { toast.classList.remove('show'); }, 2000);
+                setTimeout(() => { toast.classList.add('toast-hidden'); }, 3000);
             }
-
-            // 3. 주소창 깔끔하게 정리 (URL에서 ?loginSuccess=true 제거)
-            // 이렇게 안 하면 새로고침 할 때마다 환영 메시지가 또 뜸
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({path: newUrl}, '', newUrl);
         }
     });
-
 </script>
 
 <script th:src="@{/js/modal.js}"></script>
