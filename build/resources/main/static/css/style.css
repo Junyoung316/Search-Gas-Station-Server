@@ -1,254 +1,182 @@
-/* 페이지 전체 여백 제거 */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    overflow: hidden; /* 스크롤 비활성화 */
+/* 기본 초기화 */
+* { box-sizing: border-box; }
+body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; }
+
+/* 1. 레이아웃 구조 */
+.header-container { height: 60px; border-bottom: 1px solid #ddd; z-index: 100; position: relative; }
+
+.split-container {
+    display: flex; /* 좌우 배치 */
+    height: calc(100vh - 60px); /* 헤더 제외 높이 */
+    width: 100%;
 }
 
-/* 헤더 바 스타일 */
-.header-bar {
-    background-color: #333; /* 어두운 배경색 */
-    color: white; /* 글자 흰색 */
-    padding: 10px 20px; /* 안쪽 여백 */
-    display: flex; /* 가로 정렬 */
-    justify-content: space-between; /* 양쪽 끝으로 정렬 */
-    align-items: center; /* 세로 중앙 정렬 */
-    position: relative; /* 검색바 위치를 위해 */
-}
-
-/* 헤더의 h1 태그와 a 태그 스타일 */
-.header-bar h1 {
-    margin: 0;
-    font-size: 1.5em;
-}
-.header-bar h1 a {
-    color: white;
-    text-decoration: none;
-}
-
-.header-bar nav span {
-    margin-left: 15px;
-}
-
-/* [수정] 헤더의 메뉴 아이템 (a 태그) 스타일 */
-.header-bar nav {
+/* 좌측 사이드바 */
+.sidebar {
+    width: 380px; /* 고정 너비 */
+    height: 100%;
+    background: #fff;
+    border-right: 1px solid #ddd;
     display: flex;
-    align-items: center;
-    gap: 20px;
-    position: relative;
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
 }
 
-.header-bar nav .menu-item {
-    color: white;
-    text-decoration: none;
-    font-size: 1.2em;
-    cursor: pointer;
-    transition: color 0.2s;
-    background: none;
-    border: none;
-    padding: 0;
+/* 사이드바 상단 헤더 영역 */
+.sidebar-top {
+    display: flex;              /* 가로 배치 시작 */
+    justify-content: space-between; /* 제목은 왼쪽, 버튼은 오른쪽 끝으로 밀기 */
+    align-items: center;        /* 세로 중앙 정렬 */
+    padding: 15px 20px;         /* 안쪽 여백 */
+    border-bottom: 1px solid #eee; /* 하단 구분선 */
+    background-color: #fff;     /* 배경색 */
 }
 
-/* 마우스를 올렸을 때 스타일 */
-.header-bar nav .menu-item:hover {
-    color: #ccc;
-    transform: scale(1.1);
-}
-
-/* [추가] 모든 아이콘의 pointer-events를 none으로 */
-.header-bar nav .menu-item i {
-    pointer-events: none;
-}
-
-/* [추가] 검색/닫기 버튼 컨테이너 */
-.search-toggle-container {
-    position: relative;
-    width: 20px; /* 아이콘 크기 */
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* 검색 버튼과 닫기 버튼을 같은 위치에 배치 */
-.search-toggle-container .search-btn,
-.search-toggle-container .close-btn {
-    position: absolute;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* 기본 상태: 검색 버튼 보임, 닫기 버튼 숨김 */
-.search-toggle-container .search-btn {
-    opacity: 1;
-    visibility: visible;
-}
-
-.search-toggle-container .close-btn {
-    opacity: 0;
-    visibility: hidden;
-}
-
-.search-toggle-container .close-btn i {
+/* 제목 스타일 */
+.sidebar-top h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
     color: #333;
 }
 
-.search-toggle-container .close-btn:hover {
-    transform: scale(1.1);
-}
-
-/* 검색 활성화 시: 검색 버튼 숨김, 닫기 버튼 보임 */
-.header-bar.search-active .search-toggle-container .search-btn {
-    opacity: 0;
-    visibility: hidden;
-}
-
-.header-bar.search-active .search-toggle-container .close-btn {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* 검색바 컨테이너 */
-.search-container {
-    position: absolute;
-    right: 235px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
-    transition: width 0.3s ease, opacity 0.3s ease;
-}
-
-/* 검색 활성화 시 */
-.header-bar.search-active .search-container {
-    width: 300px;
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* 검색 입력창 */
-.search-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 20px;
-    font-size: 0.95em;
-    outline: none;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-sizing: border-box;
-}
-
-.search-input::placeholder {
-    color: #999;
-}
-
-.auth-buttons {
+/* 필터 버튼 스타일 */
+.btn-filter {
+    background-color: #fff;
+    /*border: 1px solid #ddd;*/
+    color: #555;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
     display: flex;
-    gap: 10px; /* 버튼 사이 간격 */
+    align-items: center;
+    gap: 6px; /* 아이콘과 글자 사이 간격 */
+    transition: all 0.2s;
+}
+
+.btn-filter:hover {
+    background-color: #f0f0f0;
+    color: #333;
+    border-color: #ccc;
+}
+
+.station-list {
+    flex: 1; /* 남은 공간 채움 */
+    overflow-y: auto; /* 스크롤 */
+    background: #f8f9fa;
+}
+
+/* 리스트 아이템 */
+.list-item {
+    padding: 15px 20px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.list-item:hover { background: #f0f8ff; }
+.list-item strong { display: block; font-size: 1.1em; color: #333; }
+.list-item .price { color: #d9534f; font-weight: bold; }
+.list-item .dist { font-size: 0.9em; color: #888; float: right; }
+
+/* 우측 지도 */
+.map-wrapper {
+    flex: 1; /* 나머지 너비 */
+    position: relative;
+}
+#map { width: 100%; height: 100%; }
+
+/* 내 위치 버튼 */
+#myLocationBtn {
+    position: absolute; bottom: 30px; right: 30px;
+    width: 50px; height: 50px;
+    background: white; border: none; border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    cursor: pointer; z-index: 20; font-size: 20px; color: #555;
+}
+
+/* 2. 중앙 모달 (핵심) */
+.modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+
+    /* Flexbox로 중앙 정렬 */
+    display: none;
+    justify-content: center;
     align-items: center;
 }
+.modal-overlay.open { display: flex; }
 
-.btn {
-    padding: 8px 16px;
-    border-radius: 4px; /* 살짝 둥근 모서리 */
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
+.modal-box {
+    background: white; width: 400px; padding: 30px;
+    border-radius: 10px; position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
 }
+.modal-box.small { width: 300px; }
 
-.btn-login {
-    color: #ffffff; /* 흰색 텍스트 */
-    border: 1px solid rgba(255, 255, 255, 0.6); /* 반투명 흰색 테두리 */
-    background-color: transparent;
+.close-btn {
+    position: absolute; top: 15px; right: 20px;
+    font-size: 24px; cursor: pointer; color: #aaa;
 }
+.close-btn:hover { color: #333; }
 
-.btn-login:hover {
-    border-color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1); /* 호버 시 살짝 밝아짐 */
+/* 폼 스타일 */
+.auth-form input {
+    width: 100%; padding: 12px; margin-bottom: 10px;
+    border: 1px solid #ddd; border-radius: 5px;
 }
+.btn-primary {
+    width: 100%; padding: 12px; background: #333;
+    color: white; border: none; border-radius: 5px; cursor: pointer;
+}
+.btn-primary:hover { background: #555; }
 
-.btn-signup {
-    background-color: #ffffff;
-    color: #222222; /* 헤더색과 맞춘 진한 회색 */
-    border: 1px solid #ffffff;
-    font-weight: bold;
-}
-
-.btn-signup:hover {
-    background-color: #f0f0f0; /* 살짝 어두워짐 */
-}
-
-/* [추가] 모달 콘텐츠 내부 스타일 */
-.side-modal  {
-    /* 모달 헤더와 적용 버튼 사이의 공간을 채우도록 */
-    height: calc(100% - 140px); /* (전체높이 - 헤더 - 적용버튼) */
-    overflow-y: auto; /* 내용 길어지면 스크롤 */
-    z-index: 20001;
-}
-
-.side-modal.open {
-    right: 0;
-}
-
-.mode-overlay {
-    z-index: 20000;
-}
-
-/* 오버레이도 마찬가지입니다 */
-.modal-overlay.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-content {
-    height: calc(100% - 140px); /* (전체높이 - 헤더 - 적용버튼) */
-    overflow-y: auto; /* 내용 길어지면 스크롤 */
-}
-
-/* [추가] 필터 그룹 스타일 */
-.filter-group {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
+/* 필터 모달 내부 스타일 */
 .filter-group h3 {
-    font-size: 1.1em;
+    font-size: 16px;
     margin-bottom: 10px;
-}
-.filter-option {
-    margin-bottom: 5px;
-}
-/* 라디오 버튼과 라벨 정렬 */
-.filter-option input[type="radio"] {
-    margin-right: 5px;
-    vertical-align: middle;
-}
-.filter-option label {
-    vertical-align: middle;
-    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* [추가] 적용 버튼 스타일 */
-.apply-button {
-    position: absolute; /* 모달 하단에 고정 */
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-
-    width: calc(100% - 40px); /* (좌우 패딩 20px 제외) */
-    padding: 15px;
-    background-color: #333;
-    color: white;
-    border: none;
+/* 셀렉트 박스 스타일 */
+.custom-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 1.1em;
-    font-weight: bold;
-    cursor: pointer;
+    font-size: 14px;
+    background-color: #f9f9f9;
 }
-.apply-button:hover {
-    background-color: #555;
+
+/* 라디오 버튼 그룹 스타일 */
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+}
+
+.radio-label input[type="radio"] {
+    margin-right: 6px;
+    accent-color: #333; /* 라디오 버튼 색상 */
+    transform: scale(1.2);
+}
+
+.radio-label:hover span {
+    color: #000;
+    font-weight: bold;
 }

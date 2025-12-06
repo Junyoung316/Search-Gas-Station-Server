@@ -1,4 +1,9 @@
 logging.level.org.springframework.security: DEBUG
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: WARN
 
 server:
   port: 9000
