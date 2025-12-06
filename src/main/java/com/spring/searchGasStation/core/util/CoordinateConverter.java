@@ -1,4 +1,4 @@
-package com.spring.searchGasStation.util;
+package com.spring.searchGasStation.core.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.proj4j.*;

@@ -11,12 +11,12 @@ server:
     encoding:
       charset: UTF-8
       force: true
-    session:
-      cookie:
-        secure: false       # http 환경에서도 쿠키 허용 (필수!)
-        http-only: true     # 자바스크립트 접근 방지 (보안용)
-        same-site: lax      # 크롬 브라우저 호환성 해결 (strict면 가끔 막힘)
-        path: /             # 모든 경로에서 쿠키 사용
+#    session:
+#      cookie:
+#        secure: false       # http 환경에서도 쿠키 허용 (필수!)
+#        http-only: true     # 자바스크립트 접근 방지 (보안용)
+#        same-site: lax      # 크롬 브라우저 호환성 해결 (strict면 가끔 막힘)
+#        path: /             # 모든 경로에서 쿠키 사용
 
 spring:
   application:
@@ -73,13 +73,16 @@ spring:
 opinet:
   api:
     key: "F251111103"
-    aroundAll: "http://www.opinet.co.kr/api/aroundAll.do"
+#    aroundAll: "http://www.opinet.co.kr/api/aroundAll.do"
+#
+#kakao:
+#  maps:
+#    script-key: "3e8387dd9f8679e8e9d28530cf259be3"
 
-kakao:
-  maps:
-    script-key: "3e8387dd9f8679e8e9d28530cf259be3"
-
-
+jwt:
+  secret-key: q7KmXIlY9wPVU5sK3Frcd2r0pNvuubjSNhEKbc+M4K4=
+  access-token-expire-ms: 1800000 # 30분 = 1000 * 60 * 30
+  refresh-token-expire-ms: 604800000 # 7일 = 1000 * 60 * 60 * 24 * 7
 
 
 

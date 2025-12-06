@@ -1,26 +1,35 @@
 package com.spring.searchGasStation.core.config;
 
+import com.spring.searchGasStation.core.filter.CustomLoggingFilter;
+import com.spring.searchGasStation.core.filter.JwtAuthenticationFilter;
+import com.spring.searchGasStation.core.util.jwt.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.util.List;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
 
 @Configuration
 @EnableAspectJAutoProxy
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtService jwtService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -29,10 +38,37 @@ public class SecurityConfig {
     }
 
     @Bean
+    public SecretKey secretKey(@Value("${jwt.secret-key}") String base64Key) {
+        if (base64Key == null || base64Key.isEmpty()) {
+            throw new IllegalArgumentException("app.secret-key가 설정되지 않았습니다.");
+        }
+        byte[] decodedKey = Base64.getDecoder().decode(base64Key);
+        // 디코딩된 바이트로부터 SecretKey 객체(AES용) 생성
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint() { // 권한 없는 사용자 제한
+        return (request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401: 미인증 사용자 요청, 프론트엔드에서 로그인 페이지로 이동 처리
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"status\": 401, \"error\": \"인증이 필요합니다.\"}");
+        };
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService);
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .logout(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new CustomLoggingFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(
                     auth -> auth
                             .requestMatchers("/images/**", "/favicon.ico").permitAll()
@@ -41,28 +77,11 @@ public class SecurityConfig {
                                     "/api/**",
                                     "/error"
                             ).permitAll()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint())
                 );
         return http.build();
     }
 
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration config = new CorsConfiguration();
-//
-//        // 허용할 프론트엔드 주소 (Vite 기본 포트)
-//        config.setAllowedOrigins(List.of("http://localhost:5173"));
-//
-//        // 허용할 HTTP 메서드
-//        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//
-//        // 허용할 헤더
-//        config.setAllowedHeaders(List.of("*"));
-//
-//        // 쿠키나 인증 정보 포함 허용
-//        config.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", config);
-//        return source;
-//    }
 }
