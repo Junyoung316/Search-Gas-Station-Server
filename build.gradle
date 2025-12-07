@@ -33,6 +33,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 
+    implementation 'org.springframework.boot:spring-boot-starter-validation' // 입력값 검증
+
+    // proj4j - 좌표계 변환 라이브러리
+    implementation 'org.locationtech.proj4j:proj4j:1.1.5'
+    
     compileOnly 'org.projectlombok:lombok'
 
 	runtimeOnly 'com.mysql:mysql-connector-j'
@@ -48,6 +53,10 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6' // JWT API
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6' // JWT 구현체
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' // JWT Jackson 지원
 }
 
 tasks.named('test') {
