@@ -26,7 +26,6 @@ public class OpinetController {
             @RequestParam(defaultValue = "1") int sort
     ) {
         return ResponseEntity.ok(opinetService.getNearbyStations(x, y, radius, prodcd, sort));
-//        return null;
     }
 
     @GetMapping("/api/station-detail")

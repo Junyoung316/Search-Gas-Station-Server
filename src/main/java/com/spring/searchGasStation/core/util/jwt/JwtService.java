@@ -136,13 +136,6 @@ public class JwtService {
 
     public boolean validateJwtToken(String token) { // 토큰 유효성 검사(서명 및 만료 등)
         try {
-            // 1. 블랙리스트 확인
-            if (!isTokenBlacklisted(token)) {
-                log.warn("[JWT] 블랙리스트에 등록된 토큰입니다: token={}", token);
-                throw new CustomJwtException("로그아웃된 토큰입니다.");
-            }
-
-            // 2. 토큰 유효성 검증
             Jwts.parser()
                     .verifyWith(key)
                     .build()
