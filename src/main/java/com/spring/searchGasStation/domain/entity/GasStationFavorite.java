@@ -31,11 +31,6 @@ public class GasStationFavorite {
     @Column(nullable = false, name = "station_code")
     private String stationCode;
 
-    // 즐겨찾기 목록에서 보여줄 기본 정보들
-    private String name;    // 주유소 이름
-    private String brand;   // 상표 (S-OIL, SK 등)
-    private String address; // 주소
-
 //    @Builder // 빌더 패턴 사용 권장
 //    public GasStationFavorite(Member member, String stationCode, String name, String brand, String address) {
 //        this.member = member;

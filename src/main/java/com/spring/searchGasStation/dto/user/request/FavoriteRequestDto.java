@@ -9,7 +9,4 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FavoriteRequestDto {
     private String stationCode; // 오피넷 유니크 ID
-    private String name;
-    private String brand;
-    private String address;
 }

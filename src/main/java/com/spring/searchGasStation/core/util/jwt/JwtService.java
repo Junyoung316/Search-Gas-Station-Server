@@ -23,7 +23,6 @@ import javax.crypto.SecretKey;
 
 @Slf4j
 @Service
-//@RequiredArgsConstructor
 public class JwtService {
 
     private final SecretKey key;

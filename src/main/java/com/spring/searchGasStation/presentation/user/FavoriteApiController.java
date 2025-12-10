@@ -3,22 +3,26 @@ package com.spring.searchGasStation.presentation.user;
 import com.spring.searchGasStation.application.user.favorite.FavoriteService;
 import com.spring.searchGasStation.core.dto.MainResponse;
 import com.spring.searchGasStation.dto.user.request.FavoriteRequestDto;
-import com.sun.tools.javac.Main;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping
 @RequiredArgsConstructor
 public class FavoriteApiController {
 
     private final FavoriteService favoriteService;
+
+    @GetMapping("/api/favorites/gas-station")
+    public ResponseEntity<MainResponse<List<String>>> getFavorites() {
+        log.info("getFavorites");
+        return ResponseEntity.ok(MainResponse.success(favoriteService.getFavorite()));
+    }
 
     @PostMapping("/api/favorites/gas-station")
     public ResponseEntity<MainResponse<String>> toggleFavorite(

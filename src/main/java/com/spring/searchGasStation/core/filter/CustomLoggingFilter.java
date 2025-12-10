@@ -19,12 +19,14 @@ public class CustomLoggingFilter extends OncePerRequestFilter {
 
         // 1. 요청 URL 확인
         String requestUri = request.getRequestURI();
+        String httpMethod = request.getMethod();
 
         // 2. 현재 인증된 사용자 정보 가져오기 (SecurityContext)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()) {
-            log.info("📢 [요청] URI: {} | 사용자: {} | 보유 권한: {}",
+            log.info("📢 [{} 요청] URI: {} | 사용자: {} | 보유 권한: {}",
+                    httpMethod,
                     requestUri,
                     authentication.getName(),
                     authentication.getAuthorities());

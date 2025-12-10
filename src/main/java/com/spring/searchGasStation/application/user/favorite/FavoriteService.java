@@ -5,12 +5,13 @@ import com.spring.searchGasStation.core.exception.CustomJwtException;
 import com.spring.searchGasStation.domain.entity.GasStationFavorite;
 import com.spring.searchGasStation.domain.entity.Member;
 import com.spring.searchGasStation.domain.repository.GasStationFavoriteRepository;
-import com.spring.searchGasStation.domain.repository.MemberRepository;
 import com.spring.searchGasStation.dto.user.request.FavoriteRequestDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -20,6 +21,16 @@ public class FavoriteService {
 
     private final UserCheck userCheck;
     private final GasStationFavoriteRepository favoriteRepository;
+
+    public List<String> getFavorite() {
+        Member member = userCheck.getUserCheck();
+
+        List<GasStationFavorite> gasStationFavorites = favoriteRepository.findByMember(member);
+
+        return gasStationFavorites.stream()
+                .map(GasStationFavorite::getStationCode)
+                .toList();
+    }
 
     public boolean toggleFavorite(FavoriteRequestDto dto) {
 
@@ -37,9 +48,6 @@ public class FavoriteService {
                 GasStationFavorite favorite = GasStationFavorite.builder()
                         .member(member)
                         .stationCode(dto.getStationCode())
-                        .name(dto.getName())
-                        .brand(dto.getBrand())
-                        .address(dto.getAddress())
                         .build();
                 favoriteRepository.save(favorite);
                 return true; // 찜 등록됨 (ON)
