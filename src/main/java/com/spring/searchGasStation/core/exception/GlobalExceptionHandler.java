@@ -30,4 +30,14 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
+
+    @ExceptionHandler(CustomNoResourcesJwtException.class)
+    public ResponseEntity<MainResponse<Void>> handleNoResourcesException(CustomNoResourcesJwtException ex) {
+        log.error("JWT 리소스 예외 발생: {}", ex.getMessage(), ex.getCause());
+        MainResponse<Void> errorResponse = MainResponse.error(
+                HttpStatus.UNAUTHORIZED.value(),
+                "JWT 리소스 오류: " + ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
 }

@@ -77,6 +77,9 @@ public class SecurityConfig {
                                     "/api/**",
                                     "/error"
                             ).permitAll()
+                            .requestMatchers(
+                                    "/api/favorites/**"
+                            ).hasAnyRole("USER", "ADMIN")
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint())

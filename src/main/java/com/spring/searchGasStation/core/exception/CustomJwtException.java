@@ -9,3 +9,4 @@ public class CustomJwtException extends RuntimeException {
         super(message);
     }
 }
+

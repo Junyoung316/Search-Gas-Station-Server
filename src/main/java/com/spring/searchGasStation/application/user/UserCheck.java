@@ -19,11 +19,20 @@ public class UserCheck {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication != null && authentication.isAuthenticated()) {
             String userEmail = authentication.getName();  // 사용자 식별자(ID) 조회
-            Member user = memberRepository.findByEmail(userEmail)
+            return memberRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
-            return user;
+
         }
         return null;
+    }
+
+    public boolean getUserCheckIsFavorite() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null && authentication.isAuthenticated()) {
+            String userEmail = authentication.getName();  // 사용자 식별자(ID) 조회
+            return memberRepository.existsByEmail(userEmail);
+        }
+        return false;
     }
 
 }
